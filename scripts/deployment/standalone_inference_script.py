@@ -630,6 +630,9 @@ class ArgsConfig:
     seed: int = 42
     """Seed to use for reproducibility."""
 
+    modality_config_path: str | None = None
+    """Path to a custom modality config .py file (e.g. examples/WalkerS2/mixed_walker_s2_config.py)."""
+
 
 def main(args: ArgsConfig):
     # Set up logging
@@ -862,4 +865,10 @@ def main(args: ArgsConfig):
 if __name__ == "__main__":
     # Parse arguments using tyro
     config = tyro.cli(ArgsConfig)
+    if config.modality_config_path is not None:
+        import importlib, sys
+        from pathlib import Path
+        p = Path(config.modality_config_path)
+        sys.path.insert(0, str(p.parent))
+        importlib.import_module(p.stem)
     main(config)

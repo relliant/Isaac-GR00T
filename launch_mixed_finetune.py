@@ -5,6 +5,15 @@ import os
 import sys
 from pathlib import Path
 
+# Ensure CUDA libs are visible to DataLoader worker subprocesses (DGX Spark)
+_venv = Path(__file__).parent / ".venv/lib/python3.12/site-packages"
+_cuda_libs = ":".join([
+    str(_venv / "nvidia/cu13/lib"),
+    str(_venv / "nvidia/cudnn/lib"),
+    str(_venv / "torch/lib"),
+])
+os.environ["LD_LIBRARY_PATH"] = _cuda_libs + ":" + os.environ.get("LD_LIBRARY_PATH", "")
+
 import tyro
 
 from gr00t.configs.base_config import get_default_config
@@ -93,6 +102,7 @@ if __name__ == "__main__":
     config.training.weight_decay = ft_config.weight_decay
     config.training.warmup_ratio = ft_config.warmup_ratio
     config.training.wandb_project = ft_config.wandb_project
+    config.training.max_grad_norm = 1.0  # Prevent NaN explosion
 
     config.data.shard_size = ft_config.shard_size
     config.data.episode_sampling_rate = ft_config.episode_sampling_rate
